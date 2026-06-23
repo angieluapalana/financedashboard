@@ -1,0 +1,1578 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>🏠 Anj & Vince Finance Dashboard</title>
+<style>
+  :root {
+    --navy: #1F3864;
+    --steel: #2E75B6;
+    --light-blue: #D6E4F0;
+    --green: #008000;
+    --green-bg: #E2EFDA;
+    --red: #C00000;
+    --red-bg: #FCE4D6;
+    --amber: #7F6000;
+    --amber-bg: #FFF2CC;
+    --white: #ffffff;
+    --lgrey: #F2F2F2;
+    --mgrey: #D9D9D9;
+    --text: #1a1a2e;
+    --shadow: 0 2px 12px rgba(0,0,0,0.10);
+  }
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: Arial, sans-serif; background: #eef2f7; color: var(--text); font-size: 13px; }
+
+  /* ─── HEADER ─── */
+  .header { background: var(--navy); color: #fff; padding: 14px 24px; display:flex; align-items:center; justify-content:space-between; }
+  .header h1 { font-size: 18px; font-weight:700; }
+  .header .subtitle { font-size: 11px; opacity:.75; }
+  .header-right { text-align:right; }
+  .rate-badge { background: rgba(255,255,255,0.15); border-radius:6px; padding:4px 10px; font-size:11px; }
+
+  /* ─── TABS ─── */
+  .tab-bar { background: var(--steel); display:flex; padding: 0 16px; overflow-x:auto; }
+  .tab { padding: 10px 16px; color: rgba(255,255,255,0.7); cursor:pointer; font-size:12px; font-weight:600; border-bottom: 3px solid transparent; white-space:nowrap; transition: all .2s; }
+  .tab:hover { color:#fff; }
+  .tab.active { color:#fff; border-bottom-color:#FFD700; }
+  .tab-content { display:none; padding: 20px; max-width:1400px; margin:0 auto; }
+  .tab-content.active { display:block; }
+
+  /* ─── CARDS ─── */
+  .card { background:#fff; border-radius:10px; box-shadow: var(--shadow); padding:18px; margin-bottom:16px; }
+  .card-title { font-size:13px; font-weight:700; color: var(--navy); text-transform:uppercase; letter-spacing:.5px; margin-bottom:12px; padding-bottom:8px; border-bottom: 2px solid var(--light-blue); }
+  .grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  .grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; }
+  .grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; }
+
+  /* ─── KPI BOXES ─── */
+  .kpi-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(200px,1fr)); gap:12px; margin-bottom:16px; }
+  .kpi { border-radius:8px; padding:14px 16px; position:relative; }
+  .kpi.green  { background: var(--green-bg); border-left: 4px solid var(--green); }
+  .kpi.amber  { background: var(--amber-bg); border-left: 4px solid #FFC000; }
+  .kpi.red    { background: var(--red-bg);   border-left: 4px solid var(--red); }
+  .kpi.blue   { background: var(--light-blue); border-left: 4px solid var(--steel); }
+  .kpi-label  { font-size: 10px; text-transform:uppercase; letter-spacing:.5px; font-weight:700; opacity:.7; }
+  .kpi-value  { font-size: 20px; font-weight:700; margin: 4px 0; }
+  .kpi-sub    { font-size: 10px; opacity:.65; }
+  .kpi-icon   { position:absolute; right:12px; top:50%; transform:translateY(-50%); font-size:22px; opacity:.35; }
+
+  /* ─── TABLES ─── */
+  .tbl { width:100%; border-collapse:collapse; font-size:12px; }
+  .tbl th { background: var(--navy); color:#fff; padding:8px 10px; text-align:left; font-size:11px; text-transform:uppercase; letter-spacing:.4px; position:sticky; top:0; }
+  .tbl th.right, .tbl td.right { text-align:right; }
+  .tbl th.center, .tbl td.center { text-align:center; }
+  .tbl td { padding:7px 10px; border-bottom: 1px solid #eee; vertical-align:middle; }
+  .tbl tr:last-child td { border-bottom:none; }
+  .tbl tr:hover td { background:#f7faff; }
+  .tbl tr.total-row td { background: var(--navy); color:#fff; font-weight:700; }
+  .tbl tr.section-hdr td { background: var(--steel); color:#fff; font-weight:700; font-size:11px; letter-spacing:.5px; }
+  .tbl-wrap { overflow-x:auto; border-radius:8px; box-shadow: var(--shadow); }
+
+  /* owner colours */
+  .anj  { background: #E8F0FE !important; }
+  .vinc { background: #E2EFDA !important; }
+  .shared { background: #FFF2CC !important; }
+
+  /* ─── BADGES ─── */
+  .badge { display:inline-block; padding:2px 8px; border-radius:20px; font-size:10px; font-weight:700; }
+  .badge-green  { background:var(--green-bg); color:var(--green); }
+  .badge-red    { background:var(--red-bg); color:var(--red); }
+  .badge-amber  { background:var(--amber-bg); color:var(--amber); }
+  .badge-blue   { background:var(--light-blue); color:var(--steel); }
+  .badge-grey   { background:var(--mgrey); color:#555; }
+
+  /* ─── INPUTS ─── */
+  input[type=number], input[type=text], input[type=date], select {
+    border:1px solid #ccc; border-radius:5px; padding:5px 8px; font-size:12px; width:100%;
+    font-family:Arial,sans-serif; background:#FAFFFE;
+  }
+  input[type=number]:focus, input[type=text]:focus, input[type=date]:focus, select:focus {
+    outline:none; border-color: var(--steel); box-shadow:0 0 0 2px rgba(46,117,182,0.15);
+  }
+  .input-php { position:relative; }
+  .input-php::before { content:'₱'; position:absolute; left:8px; top:50%; transform:translateY(-50%); color:#888; pointer-events:none; font-size:12px; }
+  .input-php input { padding-left:20px; }
+  .input-sm { width:110px; }
+  .input-xs { width:80px; }
+
+  /* ─── BUTTONS ─── */
+  .btn { display:inline-flex; align-items:center; gap:5px; padding:6px 14px; border-radius:6px; border:none; cursor:pointer; font-size:12px; font-weight:600; transition:all .15s; }
+  .btn-primary { background: var(--steel); color:#fff; }
+  .btn-primary:hover { background: var(--navy); }
+  .btn-success { background: var(--green); color:#fff; }
+  .btn-success:hover { background: #006600; }
+  .btn-danger  { background: var(--red); color:#fff; }
+  .btn-danger:hover  { background: #900; }
+  .btn-sm { padding: 4px 10px; font-size:11px; }
+  .btn-ghost { background:transparent; border:1px solid var(--steel); color:var(--steel); }
+  .btn-ghost:hover { background:var(--light-blue); }
+  .paid-btn { background:#E2EFDA; color:var(--green); border:1px solid #A9D18E; }
+  .paid-btn.done { background:var(--green); color:#fff; }
+
+  /* ─── PROGRESS BAR ─── */
+  .progress-wrap { background:#eee; border-radius:20px; height:10px; overflow:hidden; margin-top:6px; }
+  .progress-bar  { height:100%; border-radius:20px; transition:width .4s; }
+  .progress-bar.green { background:var(--green); }
+  .progress-bar.amber { background:#FFC000; }
+  .progress-bar.red   { background:var(--red); }
+
+  /* ─── MONTH SELECTOR ─── */
+  .month-tabs { display:flex; gap:6px; flex-wrap:wrap; margin-bottom:16px; }
+  .month-tab { padding:6px 14px; border-radius:20px; border:1px solid var(--steel); color:var(--steel); cursor:pointer; font-size:11px; font-weight:600; transition:all .15s; }
+  .month-tab:hover { background:var(--light-blue); }
+  .month-tab.active { background:var(--steel); color:#fff; }
+
+  /* ─── DEBT PRIORITY ─── */
+  .priority-1 { background:#FFCCCC !important; }
+  .priority-2 { background:#FFE0CC !important; }
+  .priority-3 { background:#FFF2CC !important; }
+  .priority-go { color: var(--green); font-weight:700; }
+  .priority-warn { color: #C07000; font-weight:700; }
+  .priority-ok { color: var(--steel); }
+
+  /* ─── NOTIFICATION ─── */
+  .toast { position:fixed; bottom:24px; right:24px; background:var(--navy); color:#fff; padding:12px 20px; border-radius:8px; font-size:13px; box-shadow:var(--shadow); opacity:0; transition:opacity .3s; z-index:9999; }
+  .toast.show { opacity:1; }
+
+  /* ─── CASH FLOW FORECAST ─── */
+  .cf-positive { color: var(--green); font-weight:700; }
+  .cf-negative { color: var(--red); font-weight:700; }
+
+  /* ─── SETTINGS ─── */
+  .settings-grid { display:grid; grid-template-columns:1fr 1fr; gap:20px; }
+  .form-group { margin-bottom:12px; }
+  .form-group label { display:block; font-size:11px; font-weight:700; text-transform:uppercase; letter-spacing:.4px; margin-bottom:4px; color:#555; }
+
+  /* ─── ROADMAP ─── */
+  .roadmap-item { border-radius:8px; padding:12px 16px; margin-bottom:8px; display:flex; align-items:flex-start; gap:12px; }
+  .roadmap-item.qw  { background: var(--green-bg); border-left:4px solid var(--green); }
+  .roadmap-item.med { background: var(--amber-bg); border-left:4px solid #FFC000; }
+  .roadmap-item.long{ background: var(--light-blue); border-left:4px solid var(--steel); }
+  .roadmap-rank { width:28px; height:28px; border-radius:50%; background:var(--navy); color:#fff; display:flex; align-items:center; justify-content:center; font-size:11px; font-weight:700; flex-shrink:0; }
+
+  /* ─── PRINT ─── */
+  @media print { .tab-bar, .btn { display:none; } .tab-content { display:block !important; } }
+
+  /* ─── MISC ─── */
+  .text-right { text-align:right; }
+  .text-center { text-align:center; }
+  .font-bold { font-weight:700; }
+  .text-sm { font-size:11px; }
+  .text-muted { color:#888; }
+  .mt-2 { margin-top:8px; }
+  .mt-4 { margin-top:16px; }
+  .flex { display:flex; }
+  .items-center { align-items:center; }
+  .justify-between { justify-content:space-between; }
+  .gap-2 { gap:8px; }
+  .gap-4 { gap:16px; }
+  .divider { height:1px; background:#eee; margin:16px 0; }
+  .quick-win-banner { background:linear-gradient(135deg,#1F3864,#2E75B6); color:#fff; border-radius:10px; padding:16px 20px; margin-bottom:16px; }
+  .savings-meter { font-size:24px; font-weight:700; color:var(--green); }
+  /* ─── SYNC STATUS ─── */
+  .sync-dot { display:inline-block; width:8px; height:8px; border-radius:50%; background:#888; margin-right:5px; vertical-align:middle; }
+  .sync-dot.connected { background:#4CAF50; }
+  .sync-dot.syncing   { background:#FFC000; animation: pulse .8s infinite; }
+  .sync-dot.error     { background:#C00000; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:.3} }
+</style>
+<!-- Firebase compat SDKs (no build step required) -->
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/12.15.0/firebase-database-compat.js"></script>
+</head>
+<body>
+
+<div class="header">
+  <div>
+    <h1>🏠 Anj &amp; Vince — Household Finance Dashboard</h1>
+    <div class="subtitle">Track income · Pay bills · Monitor debts · Forecast freedom</div>
+  </div>
+  <div class="header-right">
+    <div class="rate-badge">💱 <span id="hdr-rate">₱57.00</span>/USD &nbsp;<span id="hdr-rate-tag" style="font-size:9px;opacity:.7;"></span>&nbsp;|&nbsp; <span id="hdr-date"></span></div>
+    <div style="font-size:10px;opacity:.85;margin-top:3px;"><span class="sync-dot syncing" id="sync-dot"></span><span id="sync-status">Connecting…</span></div>
+  </div>
+</div>
+
+<div class="tab-bar">
+  <div class="tab active" onclick="showTab('dashboard')">📊 Dashboard</div>
+  <div class="tab" onclick="showTab('bills')">📅 Pay Bills</div>
+  <div class="tab" onclick="showTab('income')">💰 Income</div>
+  <div class="tab" onclick="showTab('variable')">✏️ Variable Inputs</div>
+  <div class="tab" onclick="showTab('cashflow')">📈 Cash Flow</div>
+  <div class="tab" onclick="showTab('debts')">💳 Debt Tracker</div>
+  <div class="tab" onclick="showTab('roadmap')">🗺️ Roadmap</div>
+  <div class="tab" onclick="showTab('settings')">⚙️ Settings</div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     TAB 1: DASHBOARD
+════════════════════════════════════════════════════════ -->
+<div id="tab-dashboard" class="tab-content active">
+
+  <div class="quick-win-banner">
+    <div style="font-size:12px;opacity:.75;text-transform:uppercase;letter-spacing:.5px;margin-bottom:4px;">🏆 Nearest Quick Win</div>
+    <div style="font-size:16px;font-weight:700;">Grab Loan ends Jul 10 &amp; GCredit due Jul 19 → <span style="color:#FFD700;">₱14,378 freed from August!</span></div>
+    <div style="font-size:11px;opacity:.75;margin-top:4px;">By November 2026, ~₱35,000+/month will be freed from cleared debts. Stay the course.</div>
+  </div>
+
+  <div class="kpi-grid" id="kpi-grid"></div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">💰 Monthly Income (Average Scenario)</div>
+      <table class="tbl">
+        <tr><th>Person</th><th class="right">Fortnight (USD)</th><th class="right">Monthly (PHP)</th></tr>
+        <tr>
+          <td><strong>Anj</strong></td>
+          <td class="right" id="dash-anj-usd">—</td>
+          <td class="right" id="dash-anj-php">—</td>
+        </tr>
+        <tr>
+          <td><strong>Vince</strong></td>
+          <td class="right" id="dash-vinc-usd">—</td>
+          <td class="right" id="dash-vinc-php">—</td>
+        </tr>
+        <tr class="total-row">
+          <td colspan="2">COMBINED MONTHLY</td>
+          <td class="right" id="dash-combined">—</td>
+        </tr>
+      </table>
+      <div class="mt-2">
+        <div style="display:flex;justify-content:space-between;font-size:11px;color:#555;margin-bottom:3px;">
+          <span>Bills paid this month</span><span id="bills-paid-pct">0%</span>
+        </div>
+        <div class="progress-wrap"><div class="progress-bar green" id="bills-paid-bar" style="width:0%"></div></div>
+      </div>
+    </div>
+
+    <div class="card">
+      <div class="card-title">📊 Expense Breakdown</div>
+      <table class="tbl">
+        <tr><th>Category</th><th class="right">Amount (PHP)</th><th class="right">% of Income</th></tr>
+        <tr><td>Fixed Expenses</td><td class="right" id="dash-fixed">—</td><td class="right" id="dash-fixed-pct">—</td></tr>
+        <tr><td>Debt Payments</td><td class="right" id="dash-debt">—</td><td class="right" id="dash-debt-pct">—</td></tr>
+        <tr><td>Variable / BNPL</td><td class="right" id="dash-var">—</td><td class="right" id="dash-var-pct">—</td></tr>
+        <tr class="total-row"><td>TOTAL OUTFLOW</td><td class="right" id="dash-total-out">—</td><td class="right" id="dash-total-pct">—</td></tr>
+        <tr style="background:var(--green-bg)"><td class="font-bold" style="color:var(--green)">NET CASH FLOW</td><td class="right font-bold cf-positive" id="dash-net">—</td><td class="right" id="dash-net-pct">—</td></tr>
+      </table>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">📅 Bills Due This Week</div>
+    <div id="bills-this-week"></div>
+  </div>
+
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     TAB 2: PAY BILLS
+════════════════════════════════════════════════════════ -->
+<div id="tab-bills" class="tab-content">
+  <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+    <div>
+      <div class="month-tabs" id="bill-month-tabs"></div>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost btn-sm" onclick="markAllPaid()">✅ Mark All Paid</button>
+      <button class="btn btn-danger btn-sm" onclick="clearMonthPayments()">🗑 Reset Month</button>
+    </div>
+  </div>
+
+  <div class="tbl-wrap">
+    <table class="tbl" id="bills-table">
+      <thead>
+        <tr>
+          <th>Due</th>
+          <th>Bill</th>
+          <th>Owner</th>
+          <th class="right">Expected (₱)</th>
+          <th class="right">Actual Paid (₱)</th>
+          <th>Date Paid</th>
+          <th class="center">Status</th>
+          <th>Notes</th>
+          <th class="center">Action</th>
+        </tr>
+      </thead>
+      <tbody id="bills-tbody"></tbody>
+      <tfoot id="bills-tfoot"></tfoot>
+    </table>
+  </div>
+
+  <div class="card mt-4" style="background:var(--amber-bg);border-left:4px solid #FFC000;">
+    <div class="font-bold" style="color:var(--amber);margin-bottom:6px;">⚠️ Variable Bills — Enter this month's amounts</div>
+    <div style="font-size:11px;color:#555;">SPayLater, TikTok PayLater, and MariBank Credit vary each month. Enter the actual amount from your app before marking paid.</div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     TAB 3: INCOME
+════════════════════════════════════════════════════════ -->
+<div id="tab-income" class="tab-content">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">📅 Payday Calendar — Enter Actual Income</div>
+      <div class="tbl-wrap">
+        <table class="tbl" id="income-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Pay Date</th>
+              <th class="right">Anj Expected (₱)</th>
+              <th class="right">Anj Actual (₱)</th>
+              <th class="right">Anj Variance</th>
+              <th class="right">Vince Expected (₱)</th>
+              <th class="right">Vince Actual (₱)</th>
+              <th class="right">Vince Variance</th>
+            </tr>
+          </thead>
+          <tbody id="income-tbody"></tbody>
+          <tfoot id="income-tfoot"></tfoot>
+        </table>
+      </div>
+    </div>
+
+    <div>
+      <div class="card">
+        <div class="card-title">📊 Income Summary</div>
+        <div id="income-summary-table"></div>
+      </div>
+      <div class="card mt-2">
+        <div class="card-title">💱 Quick Rate Reference</div>
+        <table class="tbl">
+          <tr><th>Scenario</th><th class="right">Anj/FN</th><th class="right">Vince/FN</th><th class="right">Monthly PHP</th></tr>
+          <tbody id="scenario-table"></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     TAB 4: VARIABLE INPUTS
+════════════════════════════════════════════════════════ -->
+<div id="tab-variable" class="tab-content">
+  <div class="card" style="background:var(--amber-bg);border-left:4px solid #FFC000;margin-bottom:12px;">
+    <div class="font-bold" style="color:var(--amber);">✏️ Edit monthly variable amounts — all calculations update instantly</div>
+    <div class="text-sm text-muted mt-2">Amounts that change month-to-month. Fixed loans (Security Bank, HSBC, etc.) are pre-filled and not editable here.</div>
+  </div>
+
+  <div class="month-tabs" id="var-month-tabs"></div>
+
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">👤 ANJ — Variable Expenses</div>
+      <div id="var-anj-inputs"></div>
+    </div>
+    <div class="card">
+      <div class="card-title">👤 VINCE — Variable Expenses</div>
+      <div id="var-vinc-inputs"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title">🏠 SHARED / HOUSEHOLD</div>
+    <div id="var-shared-inputs"></div>
+  </div>
+
+  <div class="card" style="background:var(--green-bg);">
+    <div class="card-title">📊 Variable Total for Selected Month</div>
+    <div id="var-total-summary"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     TAB 5: CASH FLOW FORECAST
+════════════════════════════════════════════════════════ -->
+<div id="tab-cashflow" class="tab-content">
+  <div class="card" style="margin-bottom:12px;">
+    <div class="card-title">📈 Monthly Cash Flow — Jul 2026 → Jan 2027</div>
+    <div id="cashflow-table-wrap" class="tbl-wrap"></div>
+  </div>
+  <div class="card">
+    <div class="card-title">📉 Debt Relief Timeline</div>
+    <div id="debt-relief-timeline"></div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     TAB 6: DEBT TRACKER
+════════════════════════════════════════════════════════ -->
+<div id="tab-debts" class="tab-content">
+  <div style="display:flex;gap:12px;margin-bottom:12px;flex-wrap:wrap;">
+    <button class="btn btn-ghost btn-sm" onclick="filterDebts('all')">All Debts</button>
+    <button class="btn btn-ghost btn-sm" onclick="filterDebts('anj')">Anj Only</button>
+    <button class="btn btn-ghost btn-sm" onclick="filterDebts('vince')">Vince Only</button>
+    <button class="btn btn-ghost btn-sm" onclick="filterDebts('quick')">🏆 Quick Wins</button>
+    <button class="btn btn-ghost btn-sm" onclick="filterDebts('bnpl')">BNPL Only</button>
+  </div>
+  <div class="tbl-wrap">
+    <table class="tbl" id="debt-table">
+      <thead>
+        <tr>
+          <th>Priority</th>
+          <th>Creditor</th>
+          <th class="center">Owner</th>
+          <th class="right">Monthly (₱)</th>
+          <th class="right">Est. Balance (₱)</th>
+          <th class="center">Due Day</th>
+          <th class="center">Ends</th>
+          <th class="center">Rem. Months</th>
+          <th>Strategy</th>
+        </tr>
+      </thead>
+      <tbody id="debt-tbody"></tbody>
+      <tfoot id="debt-tfoot"></tfoot>
+    </table>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     TAB 7: ROADMAP
+════════════════════════════════════════════════════════ -->
+<div id="tab-roadmap" class="tab-content">
+  <div class="grid-2">
+    <div>
+      <div class="card">
+        <div class="card-title">🏆 Quick Wins — Clear Within 6 Months</div>
+        <div id="roadmap-qw"></div>
+      </div>
+      <div class="card mt-2">
+        <div class="card-title">❄️ Debt Snowball Order (Smallest Balance First)</div>
+        <div id="roadmap-snowball"></div>
+      </div>
+    </div>
+    <div>
+      <div class="card">
+        <div class="card-title">🤖 AI Financial Analysis</div>
+        <div id="roadmap-analysis"></div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ════════════════════════════════════════════════════════
+     TAB 8: SETTINGS
+════════════════════════════════════════════════════════ -->
+<div id="tab-settings" class="tab-content">
+  <div class="grid-2">
+    <div class="card">
+      <div class="card-title">💱 Exchange Rate</div>
+      <div class="form-group">
+        <label>USD → PHP Rate <span id="s-rate-live-tag" style="font-size:10px;color:#2E75B6;font-weight:400;text-transform:none;letter-spacing:0;"></span></label>
+        <div class="input-php"><input type="number" id="s-usd-php" step="0.01" min="1" onchange="saveSettings()"></div>
+        <div style="font-size:10px;color:#888;margin-top:4px;">Auto-fetched daily · edit to override</div>
+      </div>
+      <div style="margin-top:8px;">
+        <button class="btn btn-ghost btn-sm" onclick="fetchLiveRate(true)">🔄 Refresh live rate</button>
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">👤 Anj Income (per Fortnight, USD)</div>
+      <div class="form-group">
+        <label>Low</label>
+        <input type="number" id="s-anj-low" step="1" onchange="saveSettings()">
+      </div>
+      <div class="form-group">
+        <label>High</label>
+        <input type="number" id="s-anj-high" step="1" onchange="saveSettings()">
+      </div>
+      <div class="form-group">
+        <label>Average (auto)</label>
+        <input type="number" id="s-anj-avg" step="1" readonly style="background:#eee;">
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">👤 Vince Income (per Fortnight, USD)</div>
+      <div class="form-group">
+        <label>Low</label>
+        <input type="number" id="s-vinc-low" step="1" onchange="saveSettings()">
+      </div>
+      <div class="form-group">
+        <label>High</label>
+        <input type="number" id="s-vinc-high" step="1" onchange="saveSettings()">
+      </div>
+      <div class="form-group">
+        <label>Average (auto)</label>
+        <input type="number" id="s-vinc-avg" step="1" readonly style="background:#eee;">
+      </div>
+    </div>
+    <div class="card">
+      <div class="card-title">🎯 Financial Targets</div>
+      <div class="form-group">
+        <label>Emergency Fund Target (months of expenses)</label>
+        <input type="number" id="s-em-months" step="0.5" min="1" onchange="saveSettings()">
+      </div>
+      <div class="form-group">
+        <label>Monthly Savings Rate Target (%)</label>
+        <input type="number" id="s-savings-rate" step="1" min="0" max="100" onchange="saveSettings()">
+      </div>
+    </div>
+  </div>
+  <div class="card" style="background:var(--red-bg);">
+    <div class="card-title" style="color:var(--red);">⚠️ Danger Zone</div>
+    <div style="display:flex;gap:10px;flex-wrap:wrap;">
+      <button class="btn btn-danger btn-sm" onclick="clearAllData()">🗑 Clear ALL saved data (reset everything)</button>
+      <button class="btn btn-ghost btn-sm" onclick="exportData()">📤 Export data (copy JSON)</button>
+    </div>
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ════════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════════
+
+const MONTHS = ['Jun-26','Jul-26','Aug-26','Sep-26','Oct-26','Nov-26','Dec-26','Jan-27'];
+const FN_PER_MO = 2.165;
+
+// Default settings
+const DEFAULT_SETTINGS = {
+  usdPhp: 57,
+  anjLow: 1000, anjHigh: 1100,
+  vincLow: 930, vincHigh: 940,
+  emMonths: 3, savingsRate: 10
+};
+
+// All bills — static definition
+// type: fixed | variable | service
+// varKey: key in variableExpenses for this bill (if variable)
+const BILLS = [
+  // id, name, owner, day, amount, category, type, varKey, notes, endsAfter (month idx 0-6, null=ongoing)
+  {id:'pldt',         name:'PLDT',                owner:'vince', day:'1st',  amount:1699,     cat:'Utilities',   type:'service',  varKey:null, notes:'Recurring monthly', ends:null},
+  {id:'billease',     name:'Billease',             owner:'vince', day:'1st',  amount:14866,    cat:'Loan',        type:'fixed',    varKey:null, notes:'Half ends Sep, half Nov', ends:4},
+  {id:'sec-bank',     name:'Security Bank',        owner:'vince', day:'2nd',  amount:10775,    cat:'Loan',        type:'fixed',    varKey:null, notes:'Ends Mar 2030', ends:null},
+  {id:'sloan-3rd',    name:"Add'l SLoan (3rd)",    owner:'anj',   day:'3rd',  amount:364.05,   cat:'Loan',        type:'fixed',    varKey:null, notes:'Until Mar 2027', ends:null},
+  {id:'sloan-anj',    name:'SLoan (Anj)',           owner:'anj',   day:'7th',  amount:7565.76,  cat:'Loan',        type:'fixed',    varKey:null, notes:'Pmt 2 of 6', ends:4},
+  {id:'grab',         name:'Grab Loan (FINAL)',     owner:'anj',   day:'10th', amount:5698.50,  cat:'Loan',        type:'fixed',    varKey:null, notes:'⚡ LAST PAYMENT — Jul only!', ends:0},
+  {id:'sloan-14',     name:"Add'l SLoan (14th)",   owner:'anj',   day:'14th', amount:1955.07,  cat:'Loan',        type:'fixed',    varKey:null, notes:'Until Sep 2026', ends:2},
+  {id:'maya-loan',    name:'Maya Loan',             owner:'vince', day:'15th', amount:2277.09,  cat:'Loan',        type:'fixed',    varKey:null, notes:'Ends Jan 2027', ends:6},
+  {id:'sloan-18',     name:"Add'l SLoan (18th)",   owner:'anj',   day:'18th', amount:1051.66,  cat:'Loan',        type:'fixed',    varKey:null, notes:'Until Jun 2027', ends:null},
+  {id:'gloan',        name:'GLoan',                 owner:'vince', day:'19th', amount:2977,     cat:'Loan',        type:'fixed',    varKey:null, notes:'Ends Jan 2027', ends:6},
+  {id:'gcredit',      name:'GCredit (ONE-TIME)',    owner:'vince', day:'19th', amount:8679,     cat:'Credit',      type:'fixed',    varKey:null, notes:'⚡ Jul 19 only — never recurs', ends:0},
+  {id:'converge',     name:'Converge Internet',     owner:'anj',   day:'20th', amount:2000,     cat:'Utilities',   type:'service',  varKey:null, notes:'Every 20th', ends:null},
+  {id:'maya-card',    name:'Maya Card',             owner:'vince', day:'20th', amount:3000,     cat:'Credit Card', type:'fixed',    varKey:null, notes:'Monthly min', ends:5},
+  {id:'vinc-sloan',   name:'Vince SLoan',           owner:'vince', day:'22nd', amount:15313.41, cat:'Loan',        type:'fixed',    varKey:null, notes:'Pmt 1 of 3 — ends Sep', ends:2},
+  {id:'hsbc',         name:'HSBC',                  owner:'vince', day:'23rd', amount:3000,     cat:'Loan',        type:'fixed',    varKey:null, notes:'Ends Jul 2027', ends:null},
+  {id:'sloan-23',     name:"Add'l SLoan (23rd)",   owner:'anj',   day:'23rd', amount:377.53,   cat:'Loan',        type:'fixed',    varKey:null, notes:'Until Dec 2026', ends:5},
+  {id:'sloan-28',     name:"Add'l SLoan (28th)",   owner:'anj',   day:'28th', amount:525.85,   cat:'Loan',        type:'fixed',    varKey:null, notes:'Until Jan 2027', ends:6},
+  {id:'rent-anj',     name:'Rent — Anj Share',      owner:'anj',   day:'EOM',  amount:10000,    cat:'Housing',     type:'service',  varKey:null, notes:'₱20,000 total split equally', ends:null},
+  {id:'rent-vinc',    name:'Rent — Vince Share',    owner:'vince', day:'EOM',  amount:10000,    cat:'Housing',     type:'service',  varKey:null, notes:'₱20,000 total split equally', ends:null},
+  {id:'elec-anj',     name:'Electricity — Anj',     owner:'anj',   day:'EOM',  amount:6500,     cat:'Utilities',   type:'variable', varKey:'elec', notes:'₱13,000 split equally', ends:null},
+  {id:'elec-vinc',    name:'Electricity — Vince',   owner:'vince', day:'EOM',  amount:6500,     cat:'Utilities',   type:'variable', varKey:'elec', notes:'₱13,000 split equally', ends:null},
+  {id:'gas',          name:'Gas Budget',             owner:'shared',day:'EOM',  amount:2000,     cat:'Utilities',   type:'variable', varKey:'gas',  notes:'Shared', ends:null},
+  {id:'tuition',      name:'AC Tuition Fee',         owner:'shared',day:'EOM',  amount:6776.50,  cat:'Education',   type:'service',  varKey:null, notes:'End of month', ends:null},
+  {id:'ins-anj',      name:'Insurance (Anj)',        owner:'anj',   day:'EOM',  amount:2000,     cat:'Insurance',   type:'service',  varKey:null, notes:'End of month', ends:null},
+  {id:'mobile-vinc',  name:'Mobile Plan (Vince)',    owner:'vince', day:'EOM',  amount:1999,     cat:'Utilities',   type:'service',  varKey:null, notes:'End of month', ends:null},
+  {id:'ins-vinc',     name:'Insurance (Vince)',      owner:'vince', day:'EOM',  amount:3500,     cat:'Insurance',   type:'service',  varKey:null, notes:'End of month', ends:null},
+  // Variable BNPL
+  {id:'spay-anj',     name:'Anj SPayLater',          owner:'anj',   day:'VAR',  amount:16576.75, cat:'BNPL',        type:'variable', varKey:'spayAnj',  notes:'Variable monthly — update each month', ends:null},
+  {id:'spay-anj2',    name:"Add'l SPayLater (Anj)", owner:'anj',   day:'VAR',  amount:1507,     cat:'BNPL',        type:'variable', varKey:'spayAnj2', notes:'Variable monthly', ends:3},
+  {id:'tiktok-anj',   name:'TikTok PayLater (Anj)', owner:'anj',   day:'VAR',  amount:3086.01,  cat:'BNPL',        type:'variable', varKey:'tiktokAnj',notes:'Fixed schedule: Jul/Aug/Sep/Oct', ends:3},
+  {id:'spay-vinc',    name:'Vince SPayLater',        owner:'vince', day:'VAR',  amount:17727.69, cat:'BNPL',        type:'variable', varKey:'spayVinc', notes:'Variable monthly — update each month', ends:null},
+  {id:'tiktok-vinc',  name:'Vince TikTok PayLater', owner:'vince', day:'VAR',  amount:13070.31, cat:'BNPL',        type:'variable', varKey:'tiktokVinc',notes:'Variable monthly', ends:null},
+  {id:'mari-vinc',    name:'MariBank Credit',        owner:'vince', day:'VAR',  amount:14270,    cat:'Loan',        type:'variable', varKey:'mariVinc', notes:'Schedule: Jul-Aug:14270 / Sep:8827 / Oct-Nov:2942.50', ends:4},
+];
+
+// Default variable expenses per month [Jul,Aug,Sep,Oct,Nov,Dec,Jan]
+const VAR_DEFAULTS = {
+  // Jun known amounts from original data; Jul onward are estimates
+  spayAnj:   [16576.75,15000,12000,9000,6000,3000,0,0],
+  spayAnj2:  [1507,1507,1200,900,600,0,0,0],
+  tiktokAnj: [3086.01,3086.01,1756.19,1040.38,704.91,0,0,0],
+  spayVinc:  [17727.69,16000,13000,10000,7000,4000,1000,0],
+  tiktokVinc:[13070.31,11000,8000,5000,2000,0,0,0],
+  mariVinc:  [14270,14270,14270,8827,2942.50,2942.50,0,0],
+  elec:      [13000,13000,13000,13000,13000,13000,13000,13000],
+  gas:       [2000,2000,2000,2000,2000,2000,2000,2000],
+  grocery:   [8000,8000,8000,8000,8000,8000,8000,8000],
+  transport: [3000,3000,3000,3000,3000,3000,3000,3000],
+  medical:   [0,0,0,0,0,0,0,0],
+  entertainment:[2000,2000,2000,2000,2000,2000,2000,2000],
+  other:     [0,0,0,0,0,0,0,0],
+};
+
+// Fixed scheduled amounts per month for bills that have known end dates
+// [Jun,Jul,Aug,Sep,Oct,Nov,Dec,Jan]
+const BILL_MONTHLY = {
+  'billease':   [14866,14866,14866,14866,14866,7433,0,0],
+  'grab':       [5698.50,5698.50,0,0,0,0,0,0],  // ends Jul 10; Jun still active
+  'sloan-14':   [1955.07,1955.07,1955.07,1955.07,0,0,0,0],
+  'vinc-sloan': [0,15313.41,15313.41,15313.41,0,0,0,0],  // Payment 1 of 3 starts Jul
+  'gcredit':    [0,8679,0,0,0,0,0,0],           // ONE-TIME Jul 19 only
+  'sloan-23':   [377.53,377.53,377.53,377.53,377.53,377.53,377.53,0],
+  'sloan-anj':  [7565.76,7565.76,7565.76,7565.76,7565.76,7565.76,0,0],
+  'maya-card':  [3000,3000,3000,3000,3000,3000,3000,0],
+};
+
+// Payday dates
+function getPayDates() {
+  const dates = [];
+  const base = new Date('2026-06-19');
+  for (let i=0; i<14; i++) {
+    const d = new Date(base);
+    d.setDate(d.getDate() + i*14);
+    dates.push(d);
+  }
+  return dates;
+}
+
+// ════════════════════════════════════════════════════════════
+// FIREBASE INIT & STATE
+// ════════════════════════════════════════════════════════════
+const firebaseConfig = {
+  apiKey: "AIzaSyBmV-bmPPx3m-Sh-erkYmmPMddGKiDUXsU",
+  authDomain: "anj-vince-finance-dashboard.firebaseapp.com",
+  databaseURL: "https://anj-vince-finance-dashboard-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "anj-vince-finance-dashboard",
+  storageBucket: "anj-vince-finance-dashboard.firebasestorage.app",
+  messagingSenderId: "938466187482",
+  appId: "1:938466187482:web:59836b82244a9e18acade3",
+  measurementId: "G-EDTMK5YF7N"
+};
+firebase.initializeApp(firebaseConfig);
+const db = firebase.database();
+
+let settings = {};
+let payments = {};        // billId_monthIdx -> {paid, actualAmount, paidDate, notes}
+let incomeActuals = {};   // payIdx -> {anj, vince}
+let varExpenses = {};     // varKey_monthIdx -> amount
+let _fbReady = false;
+
+function setSyncStatus(state, text) {
+  const dot = document.getElementById('sync-dot');
+  const lbl = document.getElementById('sync-status');
+  if (!dot || !lbl) return;
+  dot.className = 'sync-dot ' + state;
+  lbl.textContent = text;
+}
+
+function fbSave(path, value) {
+  setSyncStatus('syncing', 'Saving…');
+  db.ref('hfd/' + path).set(value)
+    .then(() => setSyncStatus('connected', 'Synced ✓'))
+    .catch(e => { console.error('FB save error:', e); setSyncStatus('error', 'Save failed!'); });
+}
+
+// ── Live exchange rate ──
+function fetchLiveRate(manual) {
+  fetch('https://api.frankfurter.app/latest?from=USD&to=PHP')
+    .then(r => r.json())
+    .then(data => {
+      const rate = data.rates && data.rates.PHP;
+      if (!rate) return;
+      settings.usdPhp = Math.round(rate * 100) / 100;
+      fbSave('settings', settings);
+      const now = new Date();
+      const t   = now.toLocaleTimeString('en-PH', {hour:'2-digit', minute:'2-digit'});
+      const tag = `· live as of ${t}`;
+      document.getElementById('hdr-rate').textContent = '₱' + settings.usdPhp.toFixed(2);
+      const hdrTag = document.getElementById('hdr-rate-tag');
+      if (hdrTag) hdrTag.textContent = tag;
+      const sTag = document.getElementById('s-rate-live-tag');
+      if (sTag) sTag.textContent = '· fetched ' + t;
+      renderSettings();
+      refreshAll();
+      if (manual) toast('Live rate updated: ₱' + settings.usdPhp.toFixed(2) + '/USD ✓');
+    })
+    .catch(e => {
+      console.warn('Live rate fetch failed, using saved rate.', e);
+      if (manual) toast('Could not fetch live rate — using saved rate');
+    });
+}
+
+// ── Migrate old localStorage data to Firebase (one-time) ──
+function migrateLocalStorage() {
+  try {
+    const ls = key => { try { return JSON.parse(localStorage.getItem(key)); } catch(e) { return null; } };
+    const lsSettings = ls('hfd_settings');
+    const lsPayments = ls('hfd_payments');
+    const lsIncome   = ls('hfd_income');
+    const lsVar      = ls('hfd_var');
+    const hasData = lsSettings || lsPayments || lsIncome || lsVar;
+    if (!hasData) return Promise.resolve(false);
+    const migrated = {
+      settings:      Object.assign({}, DEFAULT_SETTINGS, lsSettings || {}),
+      payments:      lsPayments || {},
+      incomeActuals: lsIncome   || {},
+      varExpenses:   lsVar      || {}
+    };
+    return db.ref('hfd').set(migrated).then(() => {
+      // Clear localStorage after successful migration
+      ['hfd_settings','hfd_payments','hfd_income','hfd_var'].forEach(k => localStorage.removeItem(k));
+      toast('✅ Your existing data has been migrated to cloud sync!');
+      return true;
+    });
+  } catch(e) { return Promise.resolve(false); }
+}
+
+// Real-time listener — fires on load AND whenever any device changes data
+function startSync() {
+  // Check for old localStorage data first; migrate if found and Firebase is empty
+  db.ref('hfd').once('value').then(snap => {
+    if (!snap.val()) {
+      // Firebase is empty — check if there's local data to migrate
+      return migrateLocalStorage();
+    }
+    return false;
+  }).finally(() => {
+    // Now start the live listener
+    db.ref('hfd').on('value', snap => {
+      const d = snap.val() || {};
+      settings     = Object.assign({}, DEFAULT_SETTINGS, d.settings      || {});
+      payments     = d.payments      || {};
+      incomeActuals= d.incomeActuals || {};
+      varExpenses  = d.varExpenses   || {};
+      setSyncStatus('connected', 'Live sync ✓');
+      _fbReady = true;
+      renderSettings();
+      refreshAll();
+    }, err => {
+      console.error('Firebase error:', err);
+      setSyncStatus('error', 'Connection error — showing defaults');
+      settings = Object.assign({}, DEFAULT_SETTINGS);
+      _fbReady = true;
+      renderSettings();
+      refreshAll();
+    });
+  });
+}
+
+function saveSettings() {
+  settings.usdPhp     = +document.getElementById('s-usd-php').value     || DEFAULT_SETTINGS.usdPhp;
+  settings.anjLow     = +document.getElementById('s-anj-low').value     || DEFAULT_SETTINGS.anjLow;
+  settings.anjHigh    = +document.getElementById('s-anj-high').value    || DEFAULT_SETTINGS.anjHigh;
+  settings.vincLow    = +document.getElementById('s-vinc-low').value    || DEFAULT_SETTINGS.vincLow;
+  settings.vincHigh   = +document.getElementById('s-vinc-high').value   || DEFAULT_SETTINGS.vincHigh;
+  settings.emMonths   = +document.getElementById('s-em-months').value   || DEFAULT_SETTINGS.emMonths;
+  settings.savingsRate= +document.getElementById('s-savings-rate').value|| DEFAULT_SETTINGS.savingsRate;
+  settings.anjAvg  = (settings.anjLow  + settings.anjHigh)  / 2;
+  settings.vincAvg = (settings.vincLow + settings.vincHigh) / 2;
+  document.getElementById('s-anj-avg').value  = settings.anjAvg.toFixed(0);
+  document.getElementById('s-vinc-avg').value = settings.vincAvg.toFixed(0);
+  fbSave('settings', settings);
+  document.getElementById('hdr-rate').textContent = '₱' + settings.usdPhp.toFixed(2);
+  refreshAll();
+  toast('Settings saved ✓');
+}
+
+function savePayment(billId, monthIdx, field, value) {
+  const key = billId + '_' + monthIdx;
+  if (!payments[key]) payments[key] = {paid:false, actualAmount:null, paidDate:'', notes:''};
+  payments[key][field] = value;
+  fbSave('payments', payments);
+  refreshAll();
+}
+
+function saveIncome(payIdx, person, value) {
+  if (!incomeActuals[payIdx]) incomeActuals[payIdx] = {anj:null, vince:null};
+  incomeActuals[payIdx][person] = value === '' ? null : +value;
+  fbSave('incomeActuals', incomeActuals);
+  refreshIncomeSummary();
+}
+
+function saveVar(varKey, monthIdx, value) {
+  const key = varKey + '_' + monthIdx;
+  varExpenses[key] = value === '' ? null : +value;
+  fbSave('varExpenses', varExpenses);
+  refreshCashFlow();
+  refreshVarTotal();
+}
+
+function getVar(varKey, monthIdx) {
+  const key = varKey+'_'+monthIdx;
+  if (varExpenses[key] !== undefined && varExpenses[key] !== null) return varExpenses[key];
+  return VAR_DEFAULTS[varKey]?.[monthIdx] ?? 0;
+}
+
+function getPayment(billId, monthIdx) {
+  return payments[billId+'_'+monthIdx] || {paid:false, actualAmount:null, paidDate:'', notes:''};
+}
+
+// ════════════════════════════════════════════════════════════
+// CALCULATIONS
+// ════════════════════════════════════════════════════════════
+function anjMonthly(scenario='avg') {
+  const r = settings.usdPhp || 57;
+  const fn = scenario==='low'? settings.anjLow : scenario==='high'? settings.anjHigh : ((settings.anjLow+settings.anjHigh)/2);
+  return fn * FN_PER_MO * r;
+}
+function vincMonthly(scenario='avg') {
+  const r = settings.usdPhp || 57;
+  const fn = scenario==='low'? settings.vincLow : scenario==='high'? settings.vincHigh : ((settings.vincLow+settings.vincHigh)/2);
+  return fn * FN_PER_MO * r;
+}
+function combinedMonthly(scenario='avg') { return anjMonthly(scenario) + vincMonthly(scenario); }
+
+function getBillAmount(bill, monthIdx) {
+  if (BILL_MONTHLY[bill.id]) return BILL_MONTHLY[bill.id][monthIdx] || 0;
+  if (bill.type === 'variable' && bill.varKey) return getVar(bill.varKey, monthIdx);
+  if (bill.ends !== null && monthIdx > bill.ends) return 0;
+  return bill.amount;
+}
+
+function getFixedMonthly(monthIdx) {
+  // Housing + utilities + insurance services (not loans)
+  const fixed = ['rent-anj','rent-vinc','elec-anj','elec-vinc','gas','tuition','ins-anj','mobile-vinc','ins-vinc','pldt','converge'];
+  return fixed.reduce((sum,id)=>{
+    const b = BILLS.find(x=>x.id===id);
+    return sum + (b ? getBillAmount(b, monthIdx) : 0);
+  }, 0);
+}
+
+function getDebtMonthly(monthIdx) {
+  const debt = ['billease','sec-bank','sloan-3rd','sloan-anj','grab','sloan-14','maya-loan','sloan-18','gloan','gcredit','maya-card','vinc-sloan','hsbc','sloan-23','sloan-28'];
+  return debt.reduce((sum,id)=>{
+    const b = BILLS.find(x=>x.id===id);
+    return sum + (b ? getBillAmount(b, monthIdx) : 0);
+  }, 0);
+}
+
+function getVariableMonthly(monthIdx) {
+  const varBills = ['spay-anj','spay-anj2','tiktok-anj','spay-vinc','tiktok-vinc','mari-vinc'];
+  let sum = varBills.reduce((s,id)=>{
+    const b = BILLS.find(x=>x.id===id);
+    return s + (b ? getBillAmount(b,monthIdx) : 0);
+  }, 0);
+  // Household variable
+  sum += getVar('grocery',monthIdx) + getVar('transport',monthIdx) + getVar('medical',monthIdx) + getVar('entertainment',monthIdx) + getVar('other',monthIdx);
+  return sum;
+}
+
+// ════════════════════════════════════════════════════════════
+// FORMATTING
+// ════════════════════════════════════════════════════════════
+function php(n, dec=0) {
+  if (n === null || n === undefined || isNaN(n)) return '—';
+  if (n === 0) return '₱0';
+  const abs = Math.abs(n);
+  const formatted = abs.toLocaleString('en-PH', {minimumFractionDigits:dec, maximumFractionDigits:dec});
+  return n < 0 ? '(₱'+formatted+')' : '₱'+formatted;
+}
+function pct(n) { if (!n && n!==0) return '—'; return (n*100).toFixed(1)+'%'; }
+function colorClass(n) { return n >= 0 ? 'cf-positive' : 'cf-negative'; }
+function fmtDate(d) {
+  if (!d) return '';
+  return new Date(d).toLocaleDateString('en-PH', {month:'short', day:'numeric', year:'numeric'});
+}
+
+// ════════════════════════════════════════════════════════════
+// RENDER FUNCTIONS
+// ════════════════════════════════════════════════════════════
+
+let activeBillMonth = 0;
+let activeVarMonth = 0;
+let debtFilter = 'all';
+
+function showTab(name) {
+  document.querySelectorAll('.tab-content').forEach(t=>t.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  document.getElementById('tab-'+name).classList.add('active');
+  event.currentTarget.classList.add('active');
+}
+
+function toast(msg, dur=2500) {
+  const el = document.getElementById('toast');
+  el.textContent = msg; el.classList.add('show');
+  setTimeout(()=>el.classList.remove('show'), dur);
+}
+
+// ── Settings UI ──
+function renderSettings() {
+  document.getElementById('s-usd-php').value  = settings.usdPhp;
+  document.getElementById('s-anj-low').value  = settings.anjLow;
+  document.getElementById('s-anj-high').value = settings.anjHigh;
+  document.getElementById('s-anj-avg').value  = ((settings.anjLow+settings.anjHigh)/2).toFixed(0);
+  document.getElementById('s-vinc-low').value  = settings.vincLow;
+  document.getElementById('s-vinc-high').value = settings.vincHigh;
+  document.getElementById('s-vinc-avg').value  = ((settings.vincLow+settings.vincHigh)/2).toFixed(0);
+  document.getElementById('s-em-months').value   = settings.emMonths;
+  document.getElementById('s-savings-rate').value = settings.savingsRate;
+  document.getElementById('hdr-rate').textContent = '₱'+Number(settings.usdPhp).toFixed(2);
+}
+
+// ── Dashboard KPIs ──
+function renderDashboard() {
+  const income = combinedMonthly();
+  const fixed  = getFixedMonthly(activeBillMonth);
+  const debt   = getDebtMonthly(activeBillMonth);
+  const varExp = getVariableMonthly(activeBillMonth);
+  const total  = fixed + debt + varExp;
+  const net    = income - total;
+  const dti    = debt / income;
+  const emTarget = income * (settings.emMonths||3);
+  const savTarget= income * ((settings.savingsRate||10)/100);
+
+  const kpis = [
+    {label:'Combined Monthly Income', value: php(income,0), sub:'Avg scenario', cls:'blue', icon:'💰'},
+    {label:'Total Fixed Expenses',    value: php(fixed,0),  sub:'Housing + utilities', cls:'red', icon:'🏠'},
+    {label:'Debt Payments',           value: php(debt,0),   sub:'All loans this month', cls:'red', icon:'💳'},
+    {label:'Variable / BNPL',         value: php(varExp,0), sub:'BNPL + living costs', cls: varExp > income*0.3 ? 'red' : 'amber', icon:'📊'},
+    {label:'Total Outflow',           value: php(total,0),  sub:'All expenses combined', cls:'red', icon:'📤'},
+    {label:'Net Cash Flow',           value: php(net,0),    sub: net>=0 ? 'Surplus ✓' : 'Deficit ⚠️', cls: net>=0 ? 'green':'red', icon:'📈'},
+    {label:'Debt-to-Income Ratio',    value: pct(dti),      sub: dti>.4 ? '⚠️ Critical (>40%)' : '✓ OK', cls: dti>.5 ? 'red' : dti>.4 ? 'amber' : 'green', icon:'📉'},
+    {label:'Emergency Fund Target',   value: php(emTarget,0),sub: settings.emMonths+'mo expenses', cls:'amber', icon:'🛡'},
+    {label:'Savings Target/Month',    value: php(savTarget,0),sub: settings.savingsRate+'% of income', cls:'green', icon:'💾'},
+  ];
+
+  const grid = document.getElementById('kpi-grid');
+  grid.innerHTML = kpis.map(k=>`
+    <div class="kpi ${k.cls}">
+      <div class="kpi-label">${k.label}</div>
+      <div class="kpi-value">${k.value}</div>
+      <div class="kpi-sub">${k.sub}</div>
+      <div class="kpi-icon">${k.icon}</div>
+    </div>
+  `).join('');
+
+  // income table
+  const anjU = ((settings.anjLow+settings.anjHigh)/2).toFixed(0);
+  const vincU = ((settings.vincLow+settings.vincHigh)/2).toFixed(0);
+  document.getElementById('dash-anj-usd').textContent  = '$'+Number(anjU).toLocaleString()+' USD';
+  document.getElementById('dash-anj-php').textContent  = php(anjMonthly(),0);
+  document.getElementById('dash-vinc-usd').textContent = '$'+Number(vincU).toLocaleString()+' USD';
+  document.getElementById('dash-vinc-php').textContent = php(vincMonthly(),0);
+  document.getElementById('dash-combined').textContent = php(income,0);
+
+  // expense table
+  document.getElementById('dash-fixed').textContent = php(fixed,0);
+  document.getElementById('dash-fixed-pct').textContent = pct(fixed/income);
+  document.getElementById('dash-debt').textContent = php(debt,0);
+  document.getElementById('dash-debt-pct').textContent = pct(debt/income);
+  document.getElementById('dash-var').textContent = php(varExp,0);
+  document.getElementById('dash-var-pct').textContent = pct(varExp/income);
+  document.getElementById('dash-total-out').textContent = php(total,0);
+  document.getElementById('dash-total-pct').textContent = pct(total/income);
+
+  const netEl = document.getElementById('dash-net');
+  netEl.textContent = php(net,0);
+  netEl.className = 'right font-bold ' + (net>=0?'cf-positive':'cf-negative');
+  document.getElementById('dash-net-pct').textContent = pct(net/income);
+
+  // bills progress
+  const monthBills = BILLS.filter(b=>getBillAmount(b,activeBillMonth)>0);
+  const paidCount = monthBills.filter(b=>getPayment(b.id,activeBillMonth).paid).length;
+  const paidPct = monthBills.length ? Math.round(paidCount/monthBills.length*100) : 0;
+  document.getElementById('bills-paid-pct').textContent = paidPct+'% ('+paidCount+'/'+monthBills.length+')';
+  document.getElementById('bills-paid-bar').style.width = paidPct+'%';
+  document.getElementById('bills-paid-bar').className = 'progress-bar '+(paidPct===100?'green':paidPct>50?'amber':'red');
+
+  // Bills due soon
+  renderBillsThisWeek();
+}
+
+function renderBillsThisWeek() {
+  const now = new Date();
+  const sevenDays = new Date(now); sevenDays.setDate(sevenDays.getDate()+7);
+  const dayNow = now.getDate();
+  const overdue = BILLS.filter(b=>{
+    if (!b.day.match(/^\d+/)) return false;
+    const d = parseInt(b.day);
+    const amt = getBillAmount(b, activeBillMonth);
+    if (!amt) return false;
+    const p = getPayment(b.id, activeBillMonth);
+    return !p.paid && d <= dayNow;
+  });
+  const upcoming = BILLS.filter(b=>{
+    if (!b.day.match(/^\d+/)) return false;
+    const d = parseInt(b.day);
+    const amt = getBillAmount(b, activeBillMonth);
+    if (!amt) return false;
+    const p = getPayment(b.id, activeBillMonth);
+    return !p.paid && d > dayNow && d <= dayNow+7;
+  });
+
+  let html = '';
+  if (overdue.length || upcoming.length) {
+    html += '<table class="tbl"><thead><tr><th>Bill</th><th>Owner</th><th>Due</th><th class="right">Amount</th><th>Status</th></tr></thead><tbody>';
+    overdue.forEach(b=>{
+      html += `<tr style="background:#FCE4D6"><td><strong>${b.name}</strong></td><td>${b.owner}</td><td>${b.day}</td><td class="right">${php(getBillAmount(b,activeBillMonth),2)}</td><td><span class="badge badge-red">OVERDUE</span></td></tr>`;
+    });
+    upcoming.forEach(b=>{
+      html += `<tr style="background:#FFF2CC"><td><strong>${b.name}</strong></td><td>${b.owner}</td><td>${b.day}</td><td class="right">${php(getBillAmount(b,activeBillMonth),2)}</td><td><span class="badge badge-amber">Due Soon</span></td></tr>`;
+    });
+    html += '</tbody></table>';
+  } else {
+    html = '<div style="color:var(--green);padding:12px;font-size:12px;">✅ No bills overdue or due in next 7 days for the current month!</div>';
+  }
+  document.getElementById('bills-this-week').innerHTML = html;
+}
+
+// ── Bills Calendar ──
+function renderMonthTabs(containerId, active, onClickFn) {
+  const el = document.getElementById(containerId);
+  el.innerHTML = MONTHS.map((m,i)=>`
+    <div class="month-tab ${i===active?'active':''}" onclick="${onClickFn}(${i})">${m}</div>
+  `).join('');
+}
+
+function setBillMonth(idx) {
+  activeBillMonth = idx;
+  renderMonthTabs('bill-month-tabs', idx, 'setBillMonth');
+  renderBillsTable();
+  renderDashboard();
+}
+
+function renderBillsTable() {
+  const tbody = document.getElementById('bills-tbody');
+  const tfoot = document.getElementById('bills-tfoot');
+  let rows = '';
+  let totalExpected = 0, totalPaid = 0, paidCount = 0;
+
+  // Group by day order
+  const sorted = [...BILLS].sort((a,b)=>{
+    const da = a.day==='EOM'?32:a.day==='VAR'?33:parseInt(a.day)||99;
+    const db = b.day==='EOM'?32:b.day==='VAR'?33:parseInt(b.day)||99;
+    return da-db;
+  });
+
+  sorted.forEach(bill=>{
+    const expected = getBillAmount(bill, activeBillMonth);
+    if (expected === 0 && bill.ends !== null && activeBillMonth > bill.ends) return; // skip ended
+    const pay = getPayment(bill.id, activeBillMonth);
+    const ownerClass = bill.owner==='anj'?'anj':bill.owner==='vince'?'vinc':'shared';
+    const isVar = bill.type==='variable';
+    const isPaid = pay.paid;
+    totalExpected += expected;
+    if (isPaid) { totalPaid += (pay.actualAmount ?? expected); paidCount++; }
+
+    const statusBadge = isPaid
+      ? '<span class="badge badge-green">✅ PAID</span>'
+      : expected===0 ? '<span class="badge badge-grey">N/A</span>'
+      : '<span class="badge badge-amber">Pending</span>';
+
+    rows += `<tr class="${ownerClass}" style="${isPaid?'opacity:.7':''}">
+      <td class="center font-bold">${bill.day}</td>
+      <td>${bill.name}${isVar?'<span class="badge badge-blue" style="margin-left:4px">VAR</span>':''}</td>
+      <td class="center"><span class="badge ${bill.owner==='anj'?'badge-blue':bill.owner==='vince'?'badge-green':'badge-amber'}">${bill.owner}</span></td>
+      <td class="right">${php(expected,2)}</td>
+      <td class="right">
+        <div class="input-php" style="min-width:110px">
+          <input type="number" step="0.01" min="0" class="input-sm" value="${pay.actualAmount ?? ''}"
+            placeholder="${expected.toFixed(2)}"
+            onchange="savePayment('${bill.id}',${activeBillMonth},'actualAmount',this.value===''?null:+this.value)"
+            ${isPaid?'':''}
+          >
+        </div>
+      </td>
+      <td>
+        <input type="date" value="${pay.paidDate||''}" style="width:130px"
+          onchange="savePayment('${bill.id}',${activeBillMonth},'paidDate',this.value)">
+      </td>
+      <td class="center">${statusBadge}</td>
+      <td>
+        <input type="text" value="${pay.notes||''}" placeholder="${bill.notes}"
+          style="min-width:140px;font-size:11px"
+          onchange="savePayment('${bill.id}',${activeBillMonth},'notes',this.value)">
+      </td>
+      <td class="center">
+        <button class="btn btn-sm paid-btn ${isPaid?'done':''}"
+          onclick="togglePaid('${bill.id}',${activeBillMonth})">
+          ${isPaid ? '✅ Paid' : '○ Mark Paid'}
+        </button>
+      </td>
+    </tr>`;
+  });
+
+  tbody.innerHTML = rows;
+  tfoot.innerHTML = `<tr class="total-row">
+    <td colspan="3">TOTALS — ${MONTHS[activeBillMonth]}</td>
+    <td class="right">${php(totalExpected,0)}</td>
+    <td class="right">${php(totalPaid,0)}</td>
+    <td colspan="2"><span class="badge badge-green">${paidCount} paid</span></td>
+    <td colspan="2">Remaining: ${php(totalExpected-totalPaid,0)}</td>
+  </tr>`;
+}
+
+function togglePaid(billId, monthIdx) {
+  const key = billId+'_'+monthIdx;
+  if (!payments[key]) payments[key] = {paid:false, actualAmount:null, paidDate:'', notes:''};
+  payments[key].paid = !payments[key].paid;
+  if (payments[key].paid && !payments[key].paidDate) {
+    payments[key].paidDate = new Date().toISOString().split('T')[0];
+  }
+  fbSave('payments', payments);
+  toast(payments[key].paid ? '✅ Marked as paid!' : 'Marked as unpaid');
+  renderBillsTable();
+  renderDashboard();
+}
+
+function markAllPaid() {
+  BILLS.forEach(b=>{
+    const amt = getBillAmount(b, activeBillMonth);
+    if (amt > 0) {
+      const key = b.id+'_'+activeBillMonth;
+      if (!payments[key]) payments[key]={paid:false,actualAmount:null,paidDate:'',notes:''};
+      payments[key].paid = true;
+      if (!payments[key].paidDate) payments[key].paidDate = new Date().toISOString().split('T')[0];
+    }
+  });
+  fbSave('payments', payments);
+  toast('All bills marked paid ✅');
+  renderBillsTable(); renderDashboard();
+}
+
+function clearMonthPayments() {
+  if (!confirm('Reset all payments for '+MONTHS[activeBillMonth]+'?')) return;
+  BILLS.forEach(b=>{ delete payments[b.id+'_'+activeBillMonth]; });
+  fbSave('payments', payments);
+  toast('Month reset');
+  renderBillsTable(); renderDashboard();
+}
+
+// ── Income ──
+function renderIncomeTable() {
+  const payDates = getPayDates();
+  const anjExpFn  = anjMonthly()/FN_PER_MO;
+  const vincExpFn = vincMonthly()/FN_PER_MO;
+  let tbody = '';
+  let totAnjExp=0, totAnjAct=0, totVincExp=0, totVincAct=0;
+
+  payDates.forEach((d,i)=>{
+    const act = incomeActuals[i] || {};
+    const anjAct  = act.anj  !== null && act.anj  !== undefined ? act.anj  : null;
+    const vincAct = act.vince !== null && act.vince !== undefined ? act.vince : null;
+    const anjVar  = anjAct  !== null ? anjAct  - anjExpFn  : null;
+    const vincVar = vincAct !== null ? vincAct - vincExpFn : null;
+    totAnjExp  += anjExpFn;
+    totVincExp += vincExpFn;
+    if (anjAct  !== null) totAnjAct  += anjAct;
+    if (vincAct !== null) totVincAct += vincAct;
+    const bg = i%2===0?'background:#F9FBFF':'';
+    tbody += `<tr style="${bg}">
+      <td class="center">${i+1}</td>
+      <td class="center">${d.toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'})}</td>
+      <td class="right">${php(anjExpFn,2)}</td>
+      <td class="right" style="padding:3px 6px">
+        <div class="input-php"><input type="number" step="0.01" class="input-sm"
+          value="${anjAct!==null?anjAct:''}" placeholder="${anjExpFn.toFixed(2)}"
+          onchange="saveIncome(${i},'anj',this.value)"></div>
+      </td>
+      <td class="right ${anjVar!==null?(anjVar>=0?'cf-positive':'cf-negative'):''}">${anjVar!==null?php(anjVar,2):'—'}</td>
+      <td class="right">${php(vincExpFn,2)}</td>
+      <td class="right" style="padding:3px 6px">
+        <div class="input-php"><input type="number" step="0.01" class="input-sm"
+          value="${vincAct!==null?vincAct:''}" placeholder="${vincExpFn.toFixed(2)}"
+          onchange="saveIncome(${i},'vince',this.value)"></div>
+      </td>
+      <td class="right ${vincVar!==null?(vincVar>=0?'cf-positive':'cf-negative'):''}">${vincVar!==null?php(vincVar,2):'—'}</td>
+    </tr>`;
+  });
+
+  document.getElementById('income-tbody').innerHTML = tbody;
+  document.getElementById('income-tfoot').innerHTML = `<tr class="total-row">
+    <td colspan="2">TOTALS (${payDates.length} paydays)</td>
+    <td class="right">${php(totAnjExp,0)}</td>
+    <td class="right">${php(totAnjAct||0,0)}</td>
+    <td class="right ${colorClass(totAnjAct-totAnjExp)}">${php(totAnjAct-totAnjExp,0)}</td>
+    <td class="right">${php(totVincExp,0)}</td>
+    <td class="right">${php(totVincAct||0,0)}</td>
+    <td class="right ${colorClass(totVincAct-totVincExp)}">${php(totVincAct-totVincExp,0)}</td>
+  </tr>`;
+
+  refreshIncomeSummary();
+}
+
+function refreshIncomeSummary() {
+  const monthly = {low: combinedMonthly('low'), avg: combinedMonthly('avg'), high: combinedMonthly('high')};
+  document.getElementById('income-summary-table').innerHTML = `
+    <table class="tbl">
+      <tr><th>Scenario</th><th class="right">Monthly (PHP)</th><th class="right">Quarterly</th><th class="right">Annual</th></tr>
+      <tr style="background:var(--red-bg)"><td>Low</td><td class="right">${php(monthly.low,0)}</td><td class="right">${php(monthly.low*3,0)}</td><td class="right">${php(monthly.low*12,0)}</td></tr>
+      <tr style="background:var(--amber-bg)"><td>Average</td><td class="right">${php(monthly.avg,0)}</td><td class="right">${php(monthly.avg*3,0)}</td><td class="right">${php(monthly.avg*12,0)}</td></tr>
+      <tr style="background:var(--green-bg)"><td>High</td><td class="right">${php(monthly.high,0)}</td><td class="right">${php(monthly.high*3,0)}</td><td class="right">${php(monthly.high*12,0)}</td></tr>
+    </table>`;
+
+  document.getElementById('scenario-table').innerHTML = `
+    <tr style="background:var(--red-bg)"><td>Low</td><td class="right">$${settings.anjLow}</td><td class="right">$${settings.vincLow}</td><td class="right">${php(monthly.low,0)}</td></tr>
+    <tr style="background:var(--amber-bg)"><td>Average</td><td class="right">$${((settings.anjLow+settings.anjHigh)/2).toFixed(0)}</td><td class="right">$${((settings.vincLow+settings.vincHigh)/2).toFixed(0)}</td><td class="right">${php(monthly.avg,0)}</td></tr>
+    <tr style="background:var(--green-bg)"><td>High</td><td class="right">$${settings.anjHigh}</td><td class="right">$${settings.vincHigh}</td><td class="right">${php(monthly.high,0)}</td></tr>`;
+}
+
+// ── Variable Inputs ──
+function setVarMonth(idx) {
+  activeVarMonth = idx;
+  renderMonthTabs('var-month-tabs', idx, 'setVarMonth');
+  renderVarInputs();
+}
+
+const VAR_ANJ_FIELDS = [
+  {key:'spayAnj',  label:'SPayLater'},
+  {key:'spayAnj2', label:"Add'l SPayLater"},
+  {key:'tiktokAnj',label:'TikTok PayLater'},
+];
+const VAR_VINC_FIELDS = [
+  {key:'spayVinc',  label:'SPayLater'},
+  {key:'tiktokVinc',label:'TikTok PayLater'},
+  {key:'mariVinc',  label:'MariBank Credit'},
+];
+const VAR_SHARED_FIELDS = [
+  {key:'elec',         label:'Electricity (total)'},
+  {key:'gas',          label:'Gas Budget'},
+  {key:'grocery',      label:'Groceries & Food'},
+  {key:'transport',    label:'Transportation'},
+  {key:'medical',      label:'Medical / Health'},
+  {key:'entertainment',label:'Entertainment'},
+  {key:'other',        label:'Other Expenses'},
+];
+
+function varInputHtml(fields, monthIdx) {
+  return fields.map(f=>{
+    const val = getVar(f.key, monthIdx);
+    const def = VAR_DEFAULTS[f.key]?.[monthIdx] ?? 0;
+    return `<div class="form-group">
+      <label>${f.label} <span class="text-muted">(default: ${php(def,2)})</span></label>
+      <div class="input-php">
+        <input type="number" step="0.01" min="0" value="${val}"
+          onchange="saveVar('${f.key}',${monthIdx},this.value)"
+          style="background:${val!==def?'#FFFFF0':''}">
+      </div>
+    </div>`;
+  }).join('');
+}
+
+function renderVarInputs() {
+  const m = activeVarMonth;
+  document.getElementById('var-anj-inputs').innerHTML  = varInputHtml(VAR_ANJ_FIELDS, m);
+  document.getElementById('var-vinc-inputs').innerHTML = varInputHtml(VAR_VINC_FIELDS, m);
+  document.getElementById('var-shared-inputs').innerHTML = `<div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px">${varInputHtml(VAR_SHARED_FIELDS, m)}</div>`;
+  refreshVarTotal();
+}
+
+function refreshVarTotal() {
+  const m = activeVarMonth;
+  const anjTotal  = VAR_ANJ_FIELDS.reduce((s,f)=>s+getVar(f.key,m), 0);
+  const vincTotal = VAR_VINC_FIELDS.reduce((s,f)=>s+getVar(f.key,m), 0);
+  const sharedTotal = VAR_SHARED_FIELDS.reduce((s,f)=>s+getVar(f.key,m), 0);
+  const grand = anjTotal + vincTotal + sharedTotal;
+  document.getElementById('var-total-summary').innerHTML = `
+    <div style="display:grid;grid-template-columns:repeat(4,1fr);gap:12px;text-align:center">
+      <div><div class="kpi-label">Anj Total</div><div class="kpi-value" style="color:var(--steel)">${php(anjTotal,0)}</div></div>
+      <div><div class="kpi-label">Vince Total</div><div class="kpi-value" style="color:var(--steel)">${php(vincTotal,0)}</div></div>
+      <div><div class="kpi-label">Shared/HH</div><div class="kpi-value" style="color:var(--steel)">${php(sharedTotal,0)}</div></div>
+      <div><div class="kpi-label" style="color:var(--red)">Grand Total</div><div class="kpi-value" style="color:var(--red)">${php(grand,0)}</div></div>
+    </div>`;
+}
+
+// ── Cash Flow ──
+function renderCashFlow() {
+  const income = combinedMonthly();
+  let html = `<table class="tbl"><thead><tr><th>Line Item</th>`;
+  MONTHS.forEach(m=> html += `<th class="right">${m}</th>`);
+  html += `</tr></thead><tbody>`;
+
+  // Income
+  html += `<tr class="section-hdr"><td colspan="${MONTHS.length+1}">INCOME</td></tr>`;
+  html += `<tr><td>Anj Monthly Income</td>${MONTHS.map((_,i)=>`<td class="right">${php(anjMonthly(),0)}</td>`).join('')}</tr>`;
+  html += `<tr><td>Vince Monthly Income</td>${MONTHS.map((_,i)=>`<td class="right">${php(vincMonthly(),0)}</td>`).join('')}</tr>`;
+  html += `<tr style="background:var(--green-bg);font-weight:700"><td>TOTAL INCOME</td>${MONTHS.map((_,i)=>`<td class="right cf-positive">${php(income,0)}</td>`).join('')}</tr>`;
+
+  // Fixed
+  html += `<tr class="section-hdr"><td colspan="${MONTHS.length+1}">FIXED EXPENSES</td></tr>`;
+  [
+    {n:'Rent (Total)',          ids:['rent-anj','rent-vinc']},
+    {n:'Electricity',           ids:['elec-anj','elec-vinc']},
+    {n:'Gas Budget',            ids:['gas']},
+    {n:'AC Tuition Fee',        ids:['tuition']},
+    {n:'Converge',              ids:['converge']},
+    {n:'Insurance (Anj)',       ids:['ins-anj']},
+    {n:'PLDT',                  ids:['pldt']},
+    {n:'Mobile Plan (Vince)',   ids:['mobile-vinc']},
+    {n:'Insurance (Vince)',     ids:['ins-vinc']},
+  ].forEach(row=>{
+    html += `<tr><td>${row.n}</td>`;
+    MONTHS.forEach((_,mi)=>{
+      const sum = row.ids.reduce((s,id)=>{const b=BILLS.find(x=>x.id===id);return s+(b?getBillAmount(b,mi):0);},0);
+      html += `<td class="right">${sum>0?php(sum,0):'<span class="text-muted">—</span>'}</td>`;
+    });
+    html += '</tr>';
+  });
+  html += `<tr style="background:var(--red-bg);font-weight:700"><td>TOTAL FIXED</td>${MONTHS.map((_,mi)=>`<td class="right">${php(getFixedMonthly(mi),0)}</td>`).join('')}</tr>`;
+
+  // Debts
+  html += `<tr class="section-hdr"><td colspan="${MONTHS.length+1}">DEBT PAYMENTS</td></tr>`;
+  const debtBills = ['sloan-anj','grab','sec-bank','hsbc','billease','maya-loan','gloan','maya-card','vinc-sloan','sloan-14','sloan-23','sloan-28','sloan-3rd','sloan-18','gcredit'];
+  debtBills.forEach(id=>{
+    const b = BILLS.find(x=>x.id===id); if(!b) return;
+    const amounts = MONTHS.map((_,mi)=>getBillAmount(b,mi));
+    if (amounts.every(a=>a===0)) return;
+    html += `<tr><td>${b.name}</td>`;
+    amounts.forEach(a=>{ html += `<td class="right">${a>0?php(a,2):'<span class="text-muted">—</span>'}</td>`; });
+    html += '</tr>';
+  });
+  html += `<tr style="background:var(--red-bg);font-weight:700"><td>TOTAL DEBT</td>${MONTHS.map((_,mi)=>`<td class="right">${php(getDebtMonthly(mi),0)}</td>`).join('')}</tr>`;
+
+  // Variable
+  html += `<tr class="section-hdr"><td colspan="${MONTHS.length+1}">VARIABLE / BNPL</td></tr>`;
+  const varBillIds = ['spay-anj','spay-anj2','tiktok-anj','spay-vinc','tiktok-vinc','mari-vinc'];
+  varBillIds.forEach(id=>{
+    const b = BILLS.find(x=>x.id===id); if(!b) return;
+    html += `<tr><td>${b.name} <span class="badge badge-blue">VAR</span></td>`;
+    MONTHS.forEach((_,mi)=>{
+      const a = getBillAmount(b,mi);
+      html += `<td class="right">${a>0?php(a,0):'<span class="text-muted">—</span>'}</td>`;
+    });
+    html += '</tr>';
+  });
+  // Household variable
+  [
+    {key:'grocery',label:'Groceries & Food'},
+    {key:'transport',label:'Transportation'},
+    {key:'medical',label:'Medical / Health'},
+    {key:'entertainment',label:'Entertainment'},
+    {key:'other',label:'Other Expenses'},
+  ].forEach(f=>{
+    html += `<tr><td>${f.label}</td>`;
+    MONTHS.forEach((_,mi)=>{ const v=getVar(f.key,mi); html += `<td class="right">${v>0?php(v,0):'—'}</td>`; });
+    html += '</tr>';
+  });
+  html += `<tr style="background:var(--red-bg);font-weight:700"><td>TOTAL VARIABLE</td>${MONTHS.map((_,mi)=>`<td class="right">${php(getVariableMonthly(mi),0)}</td>`).join('')}</tr>`;
+
+  // Summary
+  html += `<tr class="section-hdr"><td colspan="${MONTHS.length+1}">SUMMARY</td></tr>`;
+  html += `<tr style="background:var(--green-bg);font-weight:700"><td>TOTAL INCOME</td>${MONTHS.map(()=>`<td class="right cf-positive">${php(income,0)}</td>`).join('')}</tr>`;
+  html += `<tr style="font-weight:700"><td>(-) Fixed Expenses</td>${MONTHS.map((_,mi)=>`<td class="right cf-negative">(${php(getFixedMonthly(mi),0)})</td>`).join('')}</tr>`;
+  html += `<tr style="font-weight:700"><td>(-) Debt Payments</td>${MONTHS.map((_,mi)=>`<td class="right cf-negative">(${php(getDebtMonthly(mi),0)})</td>`).join('')}</tr>`;
+  html += `<tr style="font-weight:700"><td>(-) Variable / BNPL</td>${MONTHS.map((_,mi)=>`<td class="right cf-negative">(${php(getVariableMonthly(mi),0)})</td>`).join('')}</tr>`;
+
+  const netRow = MONTHS.map((_,mi)=>{
+    const net = income - getFixedMonthly(mi) - getDebtMonthly(mi) - getVariableMonthly(mi);
+    return `<td class="right ${net>=0?'cf-positive':'cf-negative'}">${php(net,0)}</td>`;
+  }).join('');
+  html += `<tr style="background:var(--navy);color:#fff;font-weight:700"><td>NET CASH FLOW</td>${netRow}</tr>`;
+
+  html += '</tbody></table>';
+  document.getElementById('cashflow-table-wrap').innerHTML = html;
+
+  // Debt relief timeline
+  let tl = '<table class="tbl"><thead><tr><th>Debt / Event</th>';
+  MONTHS.forEach(m=>{ tl += `<th class="center">${m}</th>`; });
+  tl += '</tr></thead><tbody>';
+  const events = [
+    {month:0, debt:'Grab Loan ends', freed:5698.50},
+    {month:0, debt:'GCredit (one-time)', freed:8679},
+    {month:2, debt:'Vince SLoan ends (+)', freed:15313.41},
+    {month:2, debt:"Add'l SLoan 14th ends (+)", freed:1955.07},
+    {month:3, debt:'TikTok Anj ends (+)', freed:3086.01},
+    {month:4, debt:'Billease halves', freed:7433},
+    {month:4, debt:'MariBank ends', freed:2942.50},
+    {month:4, debt:'SLoan (Anj) ends', freed:7565.76},
+    {month:5, debt:"Add'l SLoan 23rd ends", freed:377.53},
+    {month:5, debt:'Maya Card final month', freed:3000},
+    {month:6, debt:'Maya Loan ends (+)', freed:2277.09},
+    {month:6, debt:'GLoan ends (+)', freed:2977},
+    {month:6, debt:"Add'l SLoan 28th ends", freed:525.85},
+  ];
+  events.forEach(e=>{
+    tl += `<tr><td>${e.debt}</td>`;
+    MONTHS.forEach((_,mi)=>{
+      if (mi===e.month) tl += `<td class="center"><span class="badge badge-green">+${php(e.freed,0)}</span></td>`;
+      else if (mi>e.month) tl += `<td class="center text-muted" style="font-size:10px">freed</td>`;
+      else tl += `<td></td>`;
+    });
+    tl += '</tr>';
+  });
+
+  // Cumulative freed
+  const cumFree = MONTHS.map((_,mi)=>{
+    return events.filter(e=>e.month<=mi).reduce((s,e)=>s+e.freed,0);
+  });
+  tl += `<tr style="background:var(--green-bg);font-weight:700"><td>CUMULATIVE FREED / MONTH</td>`;
+  cumFree.forEach(v=>{ tl += `<td class="right cf-positive">${php(v,0)}</td>`; });
+  tl += '</tr></tbody></table>';
+  document.getElementById('debt-relief-timeline').innerHTML = tl;
+}
+
+// ── Debt Tracker ──
+const DEBTS = [
+  {id:'grab',       name:'Grab Loan',           owner:'Anj',   monthly:5698.50,  balance:5698.50,  due:'10th', rem:1,   ends:'Jul-26', type:'loan',   priority:1, strategy:'PAY NOW — Final July 10!'},
+  {id:'gcredit',    name:'GCredit',             owner:'Vince', monthly:8679,     balance:8679,     due:'19th', rem:1,   ends:'Jul-26', type:'credit', priority:2, strategy:'PAY Jul 19 — one-time only'},
+  {id:'vinc-sloan', name:'Vince SLoan',         owner:'Vince', monthly:15313.41, balance:45940.23, due:'22nd', rem:3,   ends:'Sep-26', type:'loan',   priority:3, strategy:'3 payments left — redirect after Sep'},
+  {id:'sloan-14',   name:"Add'l SLoan (14th)", owner:'Anj',   monthly:1955.07,  balance:5865.21,  due:'14th', rem:3,   ends:'Sep-26', type:'loan',   priority:4, strategy:'Ends Sep — maintain schedule'},
+  {id:'spay-anj2',  name:"Add'l SPayLater",    owner:'Anj',   monthly:1507,     balance:4521,     due:'VAR',  rem:3,   ends:'Aug-26', type:'bnpl',   priority:5, strategy:'Stop new purchases immediately'},
+  {id:'tiktok-anj', name:'TikTok PayLater (Anj)',owner:'Anj', monthly:3086.01,  balance:9623.49,  due:'VAR',  rem:4,   ends:'Oct-26', type:'bnpl',   priority:6, strategy:'Fixed schedule — done Oct 26'},
+  {id:'spay-anj',   name:'Anj SPayLater',       owner:'Anj',   monthly:16576.75, balance:49730.25, due:'VAR',  rem:'VAR',ends:'Var',   type:'bnpl',   priority:7, strategy:'🚨 STOP ALL NEW PURCHASES'},
+  {id:'mari-vinc',  name:'MariBank Credit',     owner:'Vince', monthly:14270,    balance:37827,    due:'VAR',  rem:4,   ends:'Nov-26', type:'loan',   priority:8, strategy:'Declining schedule — ends Nov'},
+  {id:'billease',   name:'Billease',            owner:'Vince', monthly:14866,    balance:74330,    due:'1st',  rem:5,   ends:'Nov-26', type:'loan',   priority:9, strategy:'Half ends Sep, rest Nov — big relief'},
+  {id:'sloan-23',   name:"Add'l SLoan (23rd)", owner:'Anj',   monthly:377.53,   balance:2265.18,  due:'23rd', rem:6,   ends:'Dec-26', type:'loan',   priority:10,strategy:'Small — just maintain'},
+  {id:'maya-loan',  name:'Maya Loan',           owner:'Vince', monthly:2277.09,  balance:13662.54, due:'15th', rem:6,   ends:'Jan-27', type:'loan',   priority:11,strategy:'Continue — ends Jan 2027'},
+  {id:'gloan',      name:'GLoan',              owner:'Vince', monthly:2977,     balance:17862,    due:'19th', rem:6,   ends:'Jan-27', type:'loan',   priority:12,strategy:'Continue — ends Jan 2027'},
+  {id:'sloan-28',   name:"Add'l SLoan (28th)", owner:'Anj',   monthly:525.85,   balance:3680.95,  due:'28th', rem:7,   ends:'Jan-27', type:'loan',   priority:13,strategy:'Small — maintain'},
+  {id:'spay-vinc',  name:'Vince SPayLater',    owner:'Vince', monthly:17727.69, balance:53183.07, due:'VAR',  rem:'VAR',ends:'Var',   type:'bnpl',   priority:14,strategy:'🚨 STOP ALL NEW PURCHASES'},
+  {id:'tiktok-vinc',name:'Vince TikTok',       owner:'Vince', monthly:13070.31, balance:39210.93, due:'VAR',  rem:'VAR',ends:'Var',   type:'bnpl',   priority:15,strategy:'Reduce — stop new purchases'},
+  {id:'sloan-3rd',  name:"Add'l SLoan (3rd)", owner:'Anj',   monthly:364.05,   balance:3276.45,  due:'3rd',  rem:9,   ends:'Mar-27', type:'loan',   priority:16,strategy:'Small — maintain'},
+  {id:'maya-card',  name:'Maya Card',          owner:'Vince', monthly:3000,     balance:18000,    due:'20th', rem:6,   ends:'Dec-26', type:'credit', priority:17,strategy:'Pay more than minimum if possible'},
+  {id:'hsbc',       name:'HSBC',               owner:'Vince', monthly:3000,     balance:36000,    due:'23rd', rem:12,  ends:'Jul-27', type:'loan',   priority:18,strategy:'Maintain — ends Jul 2027'},
+  {id:'sloan-18',   name:"Add'l SLoan (18th)",owner:'Anj',   monthly:1051.66,  balance:12619.92, due:'18th', rem:12,  ends:'Jun-27', type:'loan',   priority:19,strategy:'Long tail — maintain'},
+  {id:'sloan-anj',  name:'SLoan (Anj)',        owner:'Anj',   monthly:7565.76,  balance:37828.80, due:'7th',  rem:5,   ends:'Nov-26', type:'loan',   priority:20,strategy:'Pmt 2 of 6 — auto-clears Nov'},
+  {id:'sec-bank',   name:'Security Bank',      owner:'Vince', monthly:10775,    balance:430000,   due:'2nd',  rem:44,  ends:'Mar-30', type:'loan',   priority:21,strategy:'Long-term — maintain payments'},
+];
+
+function filterDebts(f) {
+  debtFilter = f;
+  document.querySelectorAll('.tab[onclick*="filterDebts"]').forEach(b=>b.classList.remove('active'));
+  renderDebtTable();
+}
+
+function renderDebtTable() {
+  let filtered = DEBTS;
+  if (debtFilter==='anj')   filtered = DEBTS.filter(d=>d.owner==='Anj');
+  if (debtFilter==='vince') filtered = DEBTS.filter(d=>d.owner==='Vince');
+  if (debtFilter==='quick') filtered = DEBTS.filter(d=>typeof d.rem==='number' && d.rem<=6);
+  if (debtFilter==='bnpl')  filtered = DEBTS.filter(d=>d.type==='bnpl');
+
+  let rows = '';
+  let totMonthly=0, totBalance=0;
+
+  filtered.forEach(d=>{
+    totMonthly += d.monthly;
+    totBalance += d.balance;
+    const isQW = typeof d.rem==='number' && d.rem<=3;
+    const isMed= typeof d.rem==='number' && d.rem>3 && d.rem<=6;
+    const bg = isQW?'background:var(--green-bg)':isMed?'background:var(--amber-bg)':d.type==='bnpl'?'background:var(--red-bg)':'';
+    const priBadge = d.priority<=3?`<span class="badge badge-red">${d.priority}</span>`:d.priority<=8?`<span class="badge badge-amber">${d.priority}</span>`:`<span class="badge badge-grey">${d.priority}</span>`;
+    rows += `<tr style="${bg}">
+      <td class="center">${priBadge}</td>
+      <td><strong>${d.name}</strong>${d.type==='bnpl'?'<span class="badge badge-red" style="margin-left:4px">BNPL</span>':''}</td>
+      <td class="center"><span class="badge ${d.owner==='Anj'?'badge-blue':'badge-green'}">${d.owner}</span></td>
+      <td class="right">${php(d.monthly,2)}</td>
+      <td class="right">${d.balance>0?php(d.balance,0):'—'}</td>
+      <td class="center">${d.due}</td>
+      <td class="center">${d.ends}</td>
+      <td class="center">${typeof d.rem==='number'?`<span class="${isQW?'priority-go':isMed?'priority-warn':'priority-ok'}">${d.rem} mo</span>`:'<span class="text-muted">VAR</span>'}</td>
+      <td style="font-size:11px">${d.strategy}</td>
+    </tr>`;
+  });
+
+  document.getElementById('debt-tbody').innerHTML = rows;
+  document.getElementById('debt-tfoot').innerHTML = `<tr class="total-row">
+    <td colspan="3">TOTALS (${filtered.length} debts)</td>
+    <td class="right">${php(totMonthly,0)}/mo</td>
+    <td class="right">${php(totBalance,0)}</td>
+    <td colspan="4"></td>
+  </tr>`;
+}
+
+// ── Roadmap ──
+function renderRoadmap() {
+  const qwHtml = [
+    {name:'Grab Loan',debt:'Anj',freed:5698.50,end:'Jul-26',action:'Pay Jul 10 — IMMEDIATE'},
+    {name:'GCredit',debt:'Vince',freed:8679,end:'Jul-26',action:'Pay Jul 19 — one-time, never recurs'},
+    {name:"Add'l SLoan (14th)",debt:'Anj',freed:1955.07,end:'Sep-26',action:'3 more payments, ends Sep'},
+    {name:'Vince SLoan',debt:'Vince',freed:15313.41,end:'Sep-26',action:'3 payments left — MASSIVE relief after!'},
+    {name:'TikTok (Anj)',debt:'Anj',freed:3086.01,end:'Oct-26',action:'Fixed schedule — clear Oct'},
+    {name:'Billease (1st half)',debt:'Vince',freed:7433,end:'Sep-26',action:'Halves from Oct — redirect savings'},
+    {name:'MariBank',debt:'Vince',freed:14270,end:'Nov-26',action:'Declining then ends Nov'},
+    {name:'Maya Loan',debt:'Vince',freed:2277.09,end:'Jan-27',action:'Continue — ends Jan 27'},
+    {name:'GLoan',debt:'Vince',freed:2977,end:'Jan-27',action:'Continue — ends Jan 27'},
+  ].map((w,i)=>`
+    <div class="roadmap-item ${i<2?'qw':i<5?'med':'long'}">
+      <div class="roadmap-rank">${i+1}</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between;align-items:center">
+          <strong>${w.name}</strong>
+          <span class="badge badge-green">+${php(w.freed,0)}/mo freed</span>
+        </div>
+        <div style="font-size:11px;color:#555;margin-top:2px">${w.debt} · Ends ${w.end}</div>
+        <div style="font-size:11px;margin-top:4px">${w.action}</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('roadmap-qw').innerHTML = qwHtml;
+
+  // Snowball
+  const snowball = DEBTS.sort((a,b)=>a.balance-b.balance).slice(0,12);
+  const sbHtml = snowball.map((d,i)=>`
+    <div class="roadmap-item ${i<3?'qw':i<6?'med':'long'}">
+      <div class="roadmap-rank">${i+1}</div>
+      <div style="flex:1">
+        <div style="display:flex;justify-content:space-between">
+          <strong>${d.name}</strong>
+          <span>${php(d.balance,0)}</span>
+        </div>
+        <div style="font-size:11px;color:#555">${d.owner} · ${php(d.monthly,0)}/mo · Ends ${d.ends}</div>
+        <div style="font-size:11px;margin-top:2px">${d.strategy}</div>
+      </div>
+    </div>
+  `).join('');
+  document.getElementById('roadmap-snowball').innerHTML = sbHtml;
+
+  // Analysis
+  const analysis = [
+    {title:'🔴 Stop BNPL Immediately', color:'var(--red-bg)', border:'var(--red)', text:'Zero new SPayLater or TikTok PayLater purchases from today. Current combined BNPL is ~₱90,000+. Every new purchase extends the debt.'},
+    {title:'🟠 Attack Grab Loan First', color:'var(--amber-bg)', border:'#FFC000', text:'₱5,698.50 due July 10. Paying this frees ₱5,699/month from August. Quick win that builds momentum.'},
+    {title:'🟠 Pay GCredit July 19', color:'var(--amber-bg)', border:'#FFC000', text:'₱8,679 one-time. After July it never comes back. Eliminating it frees all future months from this line.'},
+    {title:'🟢 Sep 2026: Big Moment', color:'var(--green-bg)', border:'var(--green)', text:"Vince SLoan (₱15,313) + Add'l SLoan 14th (₱1,955) both end. ₱17,268/month freed. Redirect ALL of this to SPayLater principal."},
+    {title:'🟢 Nov 2026: Major Relief', color:'var(--green-bg)', border:'var(--green)', text:'Billease second half ends (+₱7,433). MariBank ends. SLoan Anj ends. Combined ~₱35,000+/month in relief vs. July 2026.'},
+    {title:'🎯 Debt-Free Target', color:'var(--light-blue)', border:'var(--steel)', text:'Excluding Security Bank (ends Mar 2030): All other debts clear by ~Jun-Jul 2027 IF BNPL stops now. Security Bank continues to March 2030.'},
+    {title:'💡 Consolidation Option', color:'var(--light-blue)', border:'var(--steel)', text:'Consider SSS Salary Loan, BPI Personal Loan, or BDO Cash Loan to consolidate BNPL at lower rate. Could cut monthly BNPL by 30-40%.'},
+    {title:'🛡 Emergency Fund', color:'var(--green-bg)', border:'var(--green)', text:'Open a dedicated savings account NOW. Auto-transfer ₱3,000-5,000 every payday. Target ₱100,000 (1 month expenses) by Dec 2026.'},
+  ];
+  document.getElementById('roadmap-analysis').innerHTML = analysis.map(a=>`
+    <div style="border-left:4px solid ${a.border};background:${a.color};padding:10px 14px;border-radius:6px;margin-bottom:8px;">
+      <div style="font-weight:700;font-size:12px;margin-bottom:4px">${a.title}</div>
+      <div style="font-size:11px;color:#333;line-height:1.5">${a.text}</div>
+    </div>
+  `).join('');
+}
+
+// ════════════════════════════════════════════════════════════
+// GLOBAL REFRESH
+// ════════════════════════════════════════════════════════════
+function refreshAll() {
+  renderDashboard();
+  renderBillsTable();
+  renderIncomeTable();
+  renderVarInputs();
+  renderCashFlow();
+  renderDebtTable();
+  renderRoadmap();
+}
+
+function refreshCashFlow() { renderCashFlow(); renderDashboard(); }
+
+function clearAllData() {
+  if (!confirm('This will delete ALL saved data including payments, income records, and custom amounts. Are you sure?')) return;
+  db.ref('hfd').remove().then(() => {
+    settings = Object.assign({}, DEFAULT_SETTINGS);
+    payments = {}; incomeActuals = {}; varExpenses = {};
+    refreshAll();
+    renderSettings();
+    toast('All data cleared ✓');
+  }).catch(e => { console.error(e); toast('Error clearing data'); });
+}
+
+function exportData() {
+  const data = JSON.stringify({settings,payments,incomeActuals,varExpenses}, null, 2);
+  const el = document.createElement('textarea');
+  el.value = data; document.body.appendChild(el);
+  el.select(); document.execCommand('copy');
+  document.body.removeChild(el);
+  toast('Data copied to clipboard! ✓');
+}
+
+// ════════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', ()=>{
+  document.getElementById('hdr-date').textContent = new Date().toLocaleDateString('en-PH',{month:'short',day:'numeric',year:'numeric'});
+  renderMonthTabs('bill-month-tabs', activeBillMonth, 'setBillMonth');
+  renderMonthTabs('var-month-tabs',  activeVarMonth,  'setVarMonth');
+  // Render immediately with defaults so the page isn't blank while connecting
+  settings = Object.assign({}, DEFAULT_SETTINGS);
+  renderSettings();
+  refreshAll();
+  // Then connect Firebase (overwrites with real data when ready)
+  startSync();
+  // Fetch live USD→PHP rate on load, then refresh every hour
+  fetchLiveRate(false);
+  setInterval(() => fetchLiveRate(false), 60 * 60 * 1000);
+});
+</script>
+</body>
+</html>
